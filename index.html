@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Nutricional do Melodrama</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --accent-color: #bb86fc;
+            --secondary-color: #03dac6;
+            --danger-color: #cf6679;
+            --edit-color: #ffb74d;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        h2, h3 {
+            margin-top: 0;
+            color: var(--accent-color);
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            background-color: #2d2d2d;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: white;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+            width: 100%;
+        }
+
+        button:hover { opacity: 0.9; }
+
+        .btn-add { background-color: var(--accent-color); color: #000; }
+        .btn-calc { background-color: var(--secondary-color); color: #000; }
+        
+        .actions-group {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-action {
+            padding: 5px 10px;
+            width: auto;
+            color: #000;
+        }
+
+        .btn-delete { background-color: var(--danger-color); color: white; }
+        .btn-edit { background-color: var(--edit-color); color: #000; }
+
+        .list-item {
+            background-color: #2d2d2d;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .list-info { font-size: 0.9em; color: #ccc; }
+
+        .brand-tag {
+            background-color: #444;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-right: 5px;
+        }
+
+        #total-panel {
+            margin-top: 20px;
+            background-color: #2d2d2d;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--accent-color);
+        }
+
+        .total-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+        
+        .total-highlight {
+            font-weight: bold;
+            color: var(--secondary-color);
+            font-size: 1.3em;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid var(--accent-color);
+            box-shadow: 0 0 20px rgba(187, 134, 252, 0.2);
+        }
+
+        .modal-btns {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="card">
+            <h2>📂 Catálogo de Alimentos</h2>
+            <p style="font-size: 0.8em; color: #888;">Cadastre os dados base de 100g (conforme rótulo)</p>
+            
+            <div class="form-group">
+                <label>Nome do Alimento</label>
+                <input type="text" id="foodName" placeholder="Ex: Arroz Branco">
+            </div>
+            <div class="form-group">
+                <label>Marca (Opcional)</label>
+                <input type="text" id="foodBrand" placeholder="Ex: Tio João">
+            </div>
+
+            <div class="row">
+                <div class="form-group">
+                    <label>Kcal (100g)</label>
+                    <input type="number" id="foodKcal" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label>Carbo (g)</label>
+                    <input type="number" id="foodCarb" placeholder="0">
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label>Prot (g)</label>
+                    <input type="number" id="foodProt" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label>Gordura (g)</label>
+                    <input type="number" id="foodFat" placeholder="0">
+                </div>
+            </div>
+
+            <button class="btn-add" id="btnRegister">Salvar no Catálogo</button>
+
+            <hr style="border-color: #333; margin: 20px 0;">
+            
+            <h3>Itens Salvos</h3>
+            <div id="catalogList" style="max-height: 400px; overflow-y: auto;">
+                <p style="text-align:center; color:#666;">Carregando...</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🍽️ Montar Refeição</h2>
+            
+            <div class="form-group">
+                <label>Escolha o Alimento</label>
+                <select id="foodSelector">
+                    <option value="">Carregando...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Quantidade (em gramas)</label>
+                <input type="number" id="mealWeight" placeholder="Ex: 150">
+            </div>
+
+            <button class="btn-calc" onclick="addToMeal()">Adicionar ao Prato</button>
+
+            <div id="plateList" style="margin-top: 20px;">
+                </div>
+
+            <div id="total-panel">
+                <div class="total-item"><span>Calorias:</span> <span id="totalKcal" class="total-highlight">0 kcal</span></div>
+                <div class="total-item"><span>Carboidratos:</span> <span id="totalCarb">0 g</span></div>
+                <div class="total-item"><span>Proteínas:</span> <span id="totalProt">0 g</span></div>
+                <div class="total-item"><span>Gorduras:</span> <span id="totalFat">0 g</span></div>
+            </div>
+            
+            <button onclick="clearMeal()" style="background-color: #444; margin-top: 15px; color:white;">Limpar Prato</button>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>✏️ Editar Alimento</h3>
+            
+            <div class="form-group">
+                <label>Nome</label>
+                <input type="text" id="editName">
+            </div>
+            <div class="form-group">
+                <label>Marca</label>
+                <input type="text" id="editBrand">
+            </div>
+            <div class="row">
+                <div class="form-group"><label>Kcal</label><input type="number" id="editKcal"></div>
+                <div class="form-group"><label>Carbo</label><input type="number" id="editCarb"></div>
+            </div>
+            <div class="row">
+                <div class="form-group"><label>Prot</label><input type="number" id="editProt"></div>
+                <div class="form-group"><label>Gord</label><input type="number" id="editFat"></div>
+            </div>
+
+            <div class="modal-btns">
+                <button id="btnSaveEdit" class="btn-add">Salvar Alterações</button>
+                <button onclick="closeModal()" style="background-color: #666; color: white;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Importação das funções do Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // --- CONFIGURAÇÃO DO FIREBASE (SUBSTITUA AQUI) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyC8y92ssMbiz2HYUI78cSF7SqYupBJjrn4",
+            authDomain: "calculadoranutritiva.firebaseapp.com",
+            projectId: "calculadoranutritiva",
+            storageBucket: "calculadoranutritiva.firebasestorage.app",
+            messagingSenderId: "723431715346",
+            appId: "1:723431715346:web:3af58eb5d99d601f8f9ecb"
+        };
+        // -----------------------------------------------
+
+        // Inicializa Firebase e Conecta ao Banco
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const alimentosRef = collection(db, "alimentos");
+
+        let catalog = [];
+        let currentEditId = null;
+
+        // --- LER DADOS EM TEMPO REAL (REALTIME LISTENER) ---
+        // Isso substitui o "renderCatalog" e "loadLocalStorage"
+        onSnapshot(alimentosRef, (snapshot) => {
+            catalog = []; // Limpa lista local
+            const list = document.getElementById('catalogList');
+            const selector = document.getElementById('foodSelector');
+            
+            list.innerHTML = '';
+            selector.innerHTML = '<option value="">Selecione...</option>';
+
+            snapshot.docs.forEach(docSnap => {
+                const food = { id: docSnap.id, ...docSnap.data() };
+                catalog.push(food);
+            });
+
+            // Ordenar alfabeticamente
+            catalog.sort((a, b) => a.name.localeCompare(b.name));
+
+            // Renderizar na Tela
+            catalog.forEach(food => {
+                // Adicionar na lista visual
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.innerHTML = `
+                    <div style="flex: 1;">
+                        <strong>${food.name}</strong> 
+                        ${food.brand ? `<span class="brand-tag">${food.brand}</span>` : ''}
+                        <br>
+                        <span class="list-info">
+                            ${food.kcal}kcal | C: ${food.carb}g | P: ${food.prot}g | G: ${food.fat}g
+                        </span>
+                    </div>
+                    <div class="actions-group">
+                        <button class="btn-action btn-edit" data-id="${food.id}" title="Editar">✏️</button>
+                        <button class="btn-action btn-delete" data-id="${food.id}" title="Excluir">X</button>
+                    </div>
+                `;
+                list.appendChild(div);
+
+                // Adicionar no Select (Dropdown)
+                const option = document.createElement('option');
+                option.value = food.id;
+                option.text = `${food.name}${food.brand ? ` (${food.brand})` : ''}`;
+                selector.appendChild(option);
+            });
+
+            // Reatribuir eventos aos botões gerados dinamicamente
+            document.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.addEventListener('click', (e) => deleteFood(e.target.dataset.id));
+            });
+            document.querySelectorAll('.btn-edit').forEach(btn => {
+                btn.addEventListener('click', (e) => openEditModal(e.target.dataset.id));
+            });
+        });
+
+        // --- FUNÇÕES DE BANCO DE DADOS ---
+
+        // 1. Adicionar Alimento
+        async function registerFood() {
+            const name = document.getElementById('foodName').value;
+            const brand = document.getElementById('foodBrand').value;
+            const kcal = parseFloat(document.getElementById('foodKcal').value) || 0;
+            const carb = parseFloat(document.getElementById('foodCarb').value) || 0;
+            const prot = parseFloat(document.getElementById('foodProt').value) || 0;
+            const fat = parseFloat(document.getElementById('foodFat').value) || 0;
+
+            if (!name) { alert("Digite o nome do alimento!"); return; }
+
+            try {
+                await addDoc(alimentosRef, {
+                    name, brand, kcal, carb, prot, fat
+                });
+                
+                // Limpar campos
+                document.getElementById('foodName').value = '';
+                document.getElementById('foodBrand').value = '';
+                document.getElementById('foodKcal').value = '';
+                document.getElementById('foodCarb').value = '';
+                document.getElementById('foodProt').value = '';
+                document.getElementById('foodFat').value = '';
+            } catch (e) {
+                console.error("Erro ao adicionar: ", e);
+                alert("Erro ao salvar no banco de dados.");
+            }
+        }
+
+        // 2. Deletar Alimento
+        async function deleteFood(id) {
+            if(confirm("Tem certeza que quer apagar esse alimento do catálogo?")) {
+                await deleteDoc(doc(db, "alimentos", id));
+            }
+        }
+
+        // 3. Editar Alimento
+        window.openEditModal = function(id) { // Exposta globalmente para facilitar
+            const food = catalog.find(f => f.id === id);
+            if(food) {
+                currentEditId = id;
+                document.getElementById('editName').value = food.name;
+                document.getElementById('editBrand').value = food.brand;
+                document.getElementById('editKcal').value = food.kcal;
+                document.getElementById('editCarb').value = food.carb;
+                document.getElementById('editProt').value = food.prot;
+                document.getElementById('editFat').value = food.fat;
+                document.getElementById('editModal').style.display = 'flex';
+            }
+        }
+
+        async function saveEdit() {
+            if(currentEditId) {
+                try {
+                    const docRef = doc(db, "alimentos", currentEditId);
+                    await updateDoc(docRef, {
+                        name: document.getElementById('editName').value,
+                        brand: document.getElementById('editBrand').value,
+                        kcal: parseFloat(document.getElementById('editKcal').value) || 0,
+                        carb: parseFloat(document.getElementById('editCarb').value) || 0,
+                        prot: parseFloat(document.getElementById('editProt').value) || 0,
+                        fat: parseFloat(document.getElementById('editFat').value) || 0
+                    });
+                    closeModal();
+                } catch (
